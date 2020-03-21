@@ -184,7 +184,7 @@ partToPair (Part contentType encoding disposition headers (PartContent content))
             AttachmentDisposition fn ->
                 (:) ("Content-Disposition", "attachment; filename=" `T.append` fn)
             InlineDisposition cid fn ->
-                (:) ("Content-Disposition", "inline; filename=" `T.append` fn) . (:) ("Content-ID", "<" <> cid <> ">")
+                (:) ("Content-Disposition", "inline; filename=" `T.append` fn) . (:) ("Content-ID", "<" <> cid <> ">") . (:) ("X-Attachment-Id", fn)
             DefaultDisposition -> id
         )
       $ headers
