@@ -158,7 +158,7 @@ data PartContent = PartContent L.ByteString | NestedParts [Part]
   deriving (Eq, Show)
 
 data Disposition = AttachmentDisposition Text
-                 | InlineDisposition Text
+                 | InlineDisposition Text Text
                  | DefaultDisposition
                  deriving (Show, Eq)
 
@@ -183,8 +183,8 @@ partToPair (Part contentType encoding disposition headers (PartContent content))
       $ (case disposition of
             AttachmentDisposition fn ->
                 (:) ("Content-Disposition", "attachment; filename=" `T.append` fn)
-            InlineDisposition cid ->
-                (:) ("Content-Disposition", "inline; filename=" `T.append` cid) . (:) ("Content-ID", "<" <> cid <> ">") . (:) ("Content-Location", cid)
+            InlineDisposition cid fn ->
+                (:) ("Content-Disposition", "inline; filename=" `T.append` fn) . (:) ("Content-ID", "<" <> cid <> ">") . (:) ("Content-Location", cid)
             DefaultDisposition -> id
         )
       $ headers
@@ -483,6 +483,7 @@ data InlineImage = InlineImage {
       imageContentType :: Text
     , imageContent :: ImageContent
     , imageCID :: Text
+    , imageFilename :: Text
     } deriving Show
 
 data ImageContent = ImageFilePath FilePath | ImageByteString L.ByteString
@@ -577,7 +578,7 @@ addImage InlineImage{..} = do
                 ImageFilePath fn -> L.readFile fn
                 ImageByteString bs -> return bs
     return
-      $ Part imageContentType Base64 (InlineDisposition imageCID) [] (PartContent content)
+      $ Part imageContentType Base64 (InlineDisposition imageCID imageFilename) [] (PartContent content)
 
 mkImageParts :: [InlineImage] -> IO [Part]
 mkImageParts xs =
